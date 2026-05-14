@@ -1,110 +1,140 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Zone 2 Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
-*{margin:0;padding:0;box-sizing:border-box}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
   --neon-blue:#00cfff;--neon-pink:#ff2d78;--neon-purple:#bf5fff;
-  --dark:#0a0a18;--dark2:#10102a;--dark3:#1a1a35;--dark4:#22224a;
+  --dark:#0a0a18;--dark2:#10102a;--dark3:#1a1a35;
   --text:#e8e8ff;--muted:#8888bb;
   --font-retro:'Orbitron',monospace;--font-mono:'Share Tech Mono',monospace;
 }
-body{background:var(--dark);color:var(--text);font-family:var(--font-mono);font-size:13px}
-
-.wrap{padding:0 0 40px}
-
-.hdr{padding:16px 12px 10px;border-bottom:1px solid #ff2d7833;position:relative;overflow:hidden}
+html{font-size:16px}
+body{background:var(--dark);color:var(--text);font-family:var(--font-mono);font-size:14px;min-height:100vh;overflow-x:hidden}
+.wrap{max-width:600px;margin:0 auto;padding:0 0 60px}
+ 
+.hdr{padding:16px 14px 12px;border-bottom:1px solid #ff2d7833;position:relative;overflow:hidden}
 .hdr-scan{position:absolute;top:0;left:0;right:0;height:2px;background:var(--neon-pink);opacity:0.6;animation:scan 3s linear infinite}
 @keyframes scan{0%{top:0;opacity:0.8}100%{top:100%;opacity:0}}
-.hdr-label{font-family:var(--font-mono);font-size:10px;color:var(--neon-pink);letter-spacing:0.2em;margin-bottom:4px}
-.hdr-title{font-family:var(--font-retro);font-size:22px;font-weight:900;letter-spacing:0.05em;color:var(--neon-blue);line-height:1;text-shadow:0 0 20px #00cfff55}
+.hdr-label{font-family:var(--font-mono);font-size:11px;color:var(--neon-pink);letter-spacing:0.2em;margin-bottom:4px}
+.hdr-title{font-family:var(--font-retro);font-size:clamp(20px,6vw,28px);font-weight:900;letter-spacing:0.05em;color:var(--neon-blue);line-height:1}
 .hdr-title span{color:var(--neon-pink)}
-.hdr-meta{font-size:10px;color:var(--muted);margin-top:5px;display:flex;gap:12px;flex-wrap:wrap}
-.dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--neon-pink);margin-right:5px;animation:blink 1.5s infinite}
+.hdr-meta{font-size:11px;color:var(--muted);margin-top:6px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--neon-pink);margin-right:5px;animation:blink 1.5s infinite;vertical-align:middle}
+.dot.synced{background:#00ffb3;animation:none}
+.dot.syncing{background:#ffcc00;animation:blink 0.6s infinite}
+.dot.offline{background:var(--neon-pink);animation:blink 0.3s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
-
-.tabs{display:flex;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid #ff2d7833;padding:0 4px}
+ 
+.tabs{display:flex;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid #ff2d7833;background:var(--dark)}
 .tabs::-webkit-scrollbar{display:none}
-.tab{font-family:var(--font-retro);font-size:9px;padding:10px 10px 8px;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;color:var(--muted);white-space:nowrap;letter-spacing:0.06em;transition:color 0.2s}
+.tab{font-family:var(--font-retro);font-size:9px;padding:12px 11px 10px;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;color:var(--muted);white-space:nowrap;letter-spacing:0.06em;transition:color 0.2s;min-height:44px;flex-shrink:0}
 .tab:hover{color:var(--neon-blue)}
 .tab.on{color:var(--neon-pink);border-bottom-color:var(--neon-pink)}
-
-.page{display:none;padding:10px 10px 0}.page.on{display:block}
-
+ 
+.page{display:none;padding:10px 12px 0}.page.on{display:block}
+ 
 .kpi-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px}
-.kpi{background:var(--dark2);border:1px solid #00cfff22;border-radius:4px;padding:10px 12px;position:relative;overflow:hidden}
+.kpi{background:var(--dark2);border:1px solid #00cfff22;border-radius:4px;padding:12px;position:relative;overflow:hidden}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:var(--neon-blue);opacity:0.4}
-.kpi-lbl{font-size:9px;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:5px}
-.kpi-val{font-family:var(--font-retro);font-size:20px;font-weight:700;color:var(--neon-blue);line-height:1}
+.kpi-lbl{font-size:10px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:5px}
+.kpi-val{font-family:var(--font-retro);font-size:clamp(18px,5vw,22px);font-weight:700;color:var(--neon-blue);line-height:1}
 .kpi-sub{font-size:10px;color:var(--muted);margin-top:3px}
 .kpi-trend{font-size:10px;margin-top:3px}
-.up{color:#00ffb3}.down{color:var(--neon-pink)}
-
+.up{color:#00ffb3}.dn{color:var(--neon-pink)}
+ 
 .card{background:var(--dark2);border:1px solid #ff2d7822;border-radius:4px;padding:12px;margin-bottom:8px;position:relative;overflow:hidden}
 .card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:var(--neon-pink);opacity:0.25}
 .card-ttl{font-family:var(--font-retro);font-size:9px;color:var(--neon-pink);letter-spacing:0.14em;margin-bottom:10px}
-.chart-wrap{position:relative;height:160px}
-
-.tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:11px;min-width:480px}
-thead th{background:var(--dark3);padding:7px 8px;text-align:left;font-family:var(--font-retro);font-size:8px;color:var(--neon-blue);letter-spacing:0.1em;border-bottom:1px solid #00cfff33;white-space:nowrap}
-tbody td{padding:7px 8px;border-bottom:1px solid #ffffff08;color:var(--muted);white-space:nowrap}
+.chart-wrap{position:relative;height:180px}
+ 
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:460px}
+thead th{background:var(--dark3);padding:9px 8px;text-align:left;font-family:var(--font-retro);font-size:8px;color:var(--neon-blue);letter-spacing:0.1em;border-bottom:1px solid #00cfff33;white-space:nowrap}
+tbody td{padding:9px 8px;border-bottom:1px solid #ffffff08;color:var(--muted);white-space:nowrap;vertical-align:middle}
 tbody tr:hover td{background:#00cfff08;color:var(--text)}
 .hi{color:var(--neon-pink);font-weight:500}
-.bg{display:inline-block;padding:2px 7px;border-radius:2px;font-size:9px;font-family:var(--font-retro);letter-spacing:0.05em}
+.bg{display:inline-block;padding:3px 8px;border-radius:2px;font-size:9px;font-family:var(--font-retro)}
 .bg-g{background:#00ffb320;color:#00ffb3;border:1px solid #00ffb355}
 .bg-o{background:#ff2d7820;color:#ff9ab0;border:1px solid #ff2d7844}
-
+.del-btn{background:transparent;border:1px solid #ff2d7844;border-radius:2px;padding:4px 8px;font-family:var(--font-retro);font-size:8px;color:#ff2d7899;cursor:pointer;transition:all 0.2s;min-width:36px;min-height:30px}
+.del-btn:hover{background:#ff2d7820;color:var(--neon-pink);border-color:var(--neon-pink)}
+.del-btn.confirming{background:#ff2d7833;color:var(--neon-pink);border-color:var(--neon-pink)}
+ 
 .pb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.pb{background:var(--dark2);border:1px solid #bf5fff33;border-radius:4px;padding:10px 12px}
-.pb-lbl{font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px}
-.pb-val{font-family:var(--font-retro);font-size:16px;font-weight:700;color:var(--neon-purple)}
+.pb{background:var(--dark2);border:1px solid #bf5fff33;border-radius:4px;padding:12px}
+.pb-lbl{font-size:10px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px}
+.pb-val{font-family:var(--font-retro);font-size:clamp(14px,4vw,17px);font-weight:700;color:var(--neon-purple)}
 .pb-date{font-size:10px;color:var(--muted);margin-top:2px}
-
-.sec-ttl{font-family:var(--font-retro);font-size:9px;color:var(--neon-blue);letter-spacing:0.16em;padding:10px 0 8px;border-bottom:1px solid #00cfff22;margin-bottom:8px}
-.frow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:8px}
-.field label{display:block;font-size:9px;color:var(--muted);letter-spacing:0.1em;margin-bottom:4px}
-.field input{width:100%;background:var(--dark3);border:1px solid #00cfff33;border-radius:2px;padding:8px 10px;font-family:var(--font-mono);font-size:13px;color:var(--text);outline:none;transition:border-color 0.2s}
+ 
+.sec-ttl{font-family:var(--font-retro);font-size:9px;color:var(--neon-blue);letter-spacing:0.16em;padding:10px 0 8px;border-bottom:1px solid #00cfff22;margin-bottom:10px}
+.frow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.field label{display:block;font-size:10px;color:var(--muted);letter-spacing:0.1em;margin-bottom:5px}
+.field input{width:100%;background:var(--dark3);border:1px solid #00cfff33;border-radius:2px;padding:10px 12px;font-family:var(--font-mono);font-size:16px;color:var(--text);outline:none;transition:border-color 0.2s;-webkit-appearance:none}
 .field input:focus{border-color:var(--neon-blue)}
-.save-btn{width:100%;padding:12px;background:var(--dark3);border:1px solid var(--neon-pink);border-radius:2px;font-family:var(--font-retro);font-size:11px;font-weight:700;letter-spacing:0.1em;color:var(--neon-pink);cursor:pointer;transition:background 0.2s,color 0.2s;margin-top:4px}
+.save-btn{width:100%;padding:14px;background:var(--dark3);border:1px solid var(--neon-pink);border-radius:2px;font-family:var(--font-retro);font-size:11px;font-weight:700;letter-spacing:0.1em;color:var(--neon-pink);cursor:pointer;transition:background 0.2s,color 0.2s;margin-top:6px;min-height:48px}
 .save-btn:hover{background:var(--neon-pink);color:var(--dark)}
-.save-ok{text-align:center;font-family:var(--font-retro);font-size:10px;color:#00ffb3;letter-spacing:0.1em;margin-top:8px;min-height:18px}
-
+.save-btn:disabled{opacity:0.5;cursor:not-allowed}
+.msg{text-align:center;font-family:var(--font-retro);font-size:10px;letter-spacing:0.08em;margin-top:8px;min-height:18px}
+.msg-ok{color:#00ffb3}.msg-err{color:var(--neon-pink)}
+ 
+.loader{display:flex;align-items:center;gap:10px;padding:24px 0;color:var(--muted);font-size:12px}
+.spinner{width:16px;height:16px;border:2px solid #ffffff15;border-top-color:var(--neon-blue);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+ 
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--dark3);border:1px solid var(--neon-blue);border-radius:4px;padding:10px 20px;font-family:var(--font-retro);font-size:10px;color:var(--neon-blue);letter-spacing:0.1em;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:999;white-space:nowrap}
+.toast.show{opacity:1}
+.toast.err{border-color:var(--neon-pink);color:var(--neon-pink)}
+ 
 .settings-wrap{padding-top:4px}
-.danger-zone{background:var(--dark2);border:1px solid #ff2d7855;border-radius:4px;padding:14px;margin-bottom:8px}
-.dz-ttl{font-family:var(--font-retro);font-size:10px;color:var(--neon-pink);letter-spacing:0.12em;margin-bottom:4px}
-.dz-desc{font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5}
-.dz-btn{background:transparent;border:1px solid var(--neon-pink);border-radius:2px;padding:9px 16px;font-family:var(--font-retro);font-size:9px;letter-spacing:0.1em;color:var(--neon-pink);cursor:pointer;transition:all 0.2s}
-.dz-btn:hover{background:var(--neon-pink);color:var(--dark)}
-.dz-btn.confirm{border-color:#ff6600;color:#ff6600}
-.dz-btn.confirm:hover{background:#ff6600;color:var(--dark)}
-.confirm-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.cancel-btn{background:transparent;border:1px solid var(--muted);border-radius:2px;padding:9px 16px;font-family:var(--font-retro);font-size:9px;letter-spacing:0.1em;color:var(--muted);cursor:pointer}
+.dz{background:var(--dark2);border:1px solid #ff2d7855;border-radius:4px;padding:14px;margin-bottom:8px}
+.dz.info{border-color:#00cfff44}
+.dz-ttl{font-family:var(--font-retro);font-size:10px;color:var(--neon-pink);letter-spacing:0.12em;margin-bottom:6px}
+.dz.info .dz-ttl{color:var(--neon-blue)}
+.dz-desc{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6}
+.action-btn{background:transparent;border:1px solid var(--neon-pink);border-radius:2px;padding:10px 16px;font-family:var(--font-retro);font-size:9px;letter-spacing:0.1em;color:var(--neon-pink);cursor:pointer;transition:all 0.2s;min-height:44px}
+.action-btn:hover{background:var(--neon-pink);color:var(--dark)}
+.action-btn.blue{border-color:var(--neon-blue);color:var(--neon-blue)}
+.action-btn.blue:hover{background:var(--neon-blue);color:var(--dark)}
+.action-btn.orange{border-color:#ff6600;color:#ff6600}
+.action-btn.orange:hover{background:#ff6600;color:var(--dark)}
+.confirm-row{display:flex;gap:8px;flex-wrap:wrap}
+.cancel-btn{background:transparent;border:1px solid var(--muted);border-radius:2px;padding:10px 16px;font-family:var(--font-retro);font-size:9px;letter-spacing:0.1em;color:var(--muted);cursor:pointer;min-height:44px}
 .cancel-btn:hover{border-color:var(--text);color:var(--text)}
-.confirm-hidden{display:none}
-
+.hidden{display:none}
+ 
 .year-grid{display:grid;gap:6px;margin-top:8px}
-.year-chip{display:flex;align-items:center;justify-content:space-between;background:var(--dark3);border:1px solid #bf5fff33;border-radius:2px;padding:8px 12px;cursor:pointer;transition:border-color 0.2s}
+.year-chip{display:flex;align-items:center;justify-content:space-between;background:var(--dark3);border:1px solid #bf5fff33;border-radius:2px;padding:12px;cursor:pointer;transition:border-color 0.2s;min-height:48px}
 .year-chip:hover{border-color:var(--neon-purple)}
 .year-chip.active-yr{border-color:var(--neon-purple);background:#bf5fff15}
 .yc-name{font-family:var(--font-retro);font-size:11px;color:var(--text)}
-.yc-count{font-size:10px;color:var(--muted)}
-.yc-dot{width:6px;height:6px;border-radius:50%;background:var(--neon-purple)}
+.yc-count{font-size:10px;color:var(--muted);margin-top:2px}
+.yc-dot{width:7px;height:7px;border-radius:50%;background:var(--neon-purple);flex-shrink:0}
+.log-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.hint{font-size:10px;color:var(--muted)}
+.empty{text-align:center;color:var(--muted);padding:32px 0;font-size:13px}
 </style>
-
+ 
 <div class="wrap">
-<h2 style="position:absolute;width:1px;height:1px;overflow:hidden">Zone 2 training tracker — Miami Vice style</h2>
-
+ 
 <div class="hdr">
   <div class="hdr-scan"></div>
-  <div class="hdr-label">// training system v2.0</div>
+  <div class="hdr-label">// training system v3.0</div>
   <div class="hdr-title"><span>Zone</span> 2 Tracker</div>
   <div class="hdr-meta">
-    <span><span class="dot"></span>stationary bike</span>
-    <span id="hdr-sessions">— sessions</span>
-    <span id="hdr-year">— year</span>
+    <span><span class="dot" id="sync-dot"></span><span id="sync-status">connecting...</span></span>
+    <span id="hdr-sessions">—</span>
+    <span id="hdr-year">—</span>
   </div>
 </div>
-
+ 
 <div class="tabs">
   <button class="tab on" onclick="nav('dashboard',this)">Dashboard</button>
   <button class="tab" onclick="nav('charts',this)">Charts</button>
@@ -113,47 +143,43 @@ tbody tr:hover td{background:#00cfff08;color:var(--text)}
   <button class="tab" onclick="nav('add',this)">+ Log ride</button>
   <button class="tab" onclick="nav('settings',this)">Settings</button>
 </div>
-
+ 
 <div class="page on" id="pg-dashboard">
-  <div class="kpi-grid" id="kpi-grid"></div>
-  <div class="card">
-    <div class="card-ttl">// avg power (W)</div>
-    <div class="chart-wrap"><canvas id="c-power"></canvas></div>
-  </div>
-  <div class="card">
-    <div class="card-ttl">// % time in zone 2</div>
-    <div class="chart-wrap"><canvas id="c-z2pct"></canvas></div>
+  <div id="dash-loader" class="loader"><div class="spinner"></div>loading from Google Sheets...</div>
+  <div id="dash-content" class="hidden">
+    <div class="kpi-grid" id="kpi-grid"></div>
+    <div class="card">
+      <div class="card-ttl">// avg power (W)</div>
+      <div class="chart-wrap"><canvas id="c-power"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-ttl">// % time in zone 2</div>
+      <div class="chart-wrap"><canvas id="c-z2pct"></canvas></div>
+    </div>
   </div>
 </div>
-
+ 
 <div class="page" id="pg-charts">
-  <div class="card">
-    <div class="card-ttl">// power efficiency — W per BPM</div>
-    <div class="chart-wrap"><canvas id="c-eff"></canvas></div>
-  </div>
-  <div class="card">
-    <div class="card-ttl">// avg heart rate (bpm)</div>
-    <div class="chart-wrap"><canvas id="c-hr"></canvas></div>
-  </div>
-  <div class="card">
-    <div class="card-ttl">// zone 2 score per session</div>
-    <div class="chart-wrap"><canvas id="c-z2score"></canvas></div>
-  </div>
+  <div class="card"><div class="card-ttl">// power efficiency — W per BPM</div><div class="chart-wrap"><canvas id="c-eff"></canvas></div></div>
+  <div class="card"><div class="card-ttl">// avg heart rate (bpm)</div><div class="chart-wrap"><canvas id="c-hr"></canvas></div></div>
+  <div class="card"><div class="card-ttl">// zone 2 score per session</div><div class="chart-wrap"><canvas id="c-z2score"></canvas></div></div>
 </div>
-
+ 
 <div class="page" id="pg-log">
+  <div class="log-topbar">
+    <span class="hint">swipe left for more columns</span>
+    <button class="action-btn blue" style="padding:7px 14px;min-height:36px;font-size:8px" onclick="loadFromSheets(false)">&#8635; refresh</button>
+  </div>
   <div class="tbl-wrap">
     <table>
-      <thead><tr><th>#</th><th>Date</th><th>Power W</th><th>HR</th><th>% Z2</th><th>Z2 min</th><th>Strain</th><th>W/BPM</th><th>Z2 score</th></tr></thead>
+      <thead><tr><th>Date</th><th>Power W</th><th>HR</th><th>% Z2</th><th>Z2 min</th><th>Strain</th><th>W/BPM</th><th>Z2 score</th><th></th></tr></thead>
       <tbody id="log-body"></tbody>
     </table>
   </div>
 </div>
-
-<div class="page" id="pg-bests">
-  <div class="pb-grid" id="pb-grid"></div>
-</div>
-
+ 
+<div class="page" id="pg-bests"><div class="pb-grid" id="pb-grid"></div></div>
+ 
 <div class="page" id="pg-add">
   <div class="card">
     <div class="sec-ttl">// whoop data</div>
@@ -185,233 +211,359 @@ tbody tr:hover td{background:#00cfff08;color:var(--text)}
     <div class="frow">
       <div class="field"><label>Distance (mi)</label><input type="number" id="f-dist" step="0.01" placeholder="8.60"></div>
     </div>
-    <button class="save-btn" onclick="saveWorkout()">// save session</button>
-    <div class="save-ok" id="save-ok"></div>
+    <button class="save-btn" id="save-btn" onclick="saveWorkout()">// save session</button>
+    <div class="msg msg-ok" id="save-ok"></div>
+    <div class="msg msg-err" id="save-err"></div>
   </div>
 </div>
-
+ 
 <div class="page" id="pg-settings">
   <div class="settings-wrap">
-    <div class="danger-zone">
+    <div class="dz info">
+      <div class="dz-ttl">// cloud sync</div>
+      <div class="dz-desc">Data is saved live to Google Sheets. Any device with this app reads from the same spreadsheet automatically.</div>
+      <button class="action-btn blue" onclick="loadFromSheets(false)">&#8635; sync now</button>
+    </div>
+    <div class="dz">
       <div class="dz-ttl">// start new year</div>
-      <div class="dz-desc">Archive current sessions and start a fresh training year. Your old data is saved and you can switch between years.</div>
-      <div id="new-year-idle"><button class="dz-btn" onclick="showNewYear()">Start new year</button></div>
-      <div id="new-year-confirm" class="confirm-hidden">
-        <div style="font-size:11px;color:var(--neon-pink);margin-bottom:8px;font-family:var(--font-retro);letter-spacing:0.06em">Name this year (e.g. 2025):</div>
-        <input type="text" id="year-name-input" style="width:100%;background:var(--dark3);border:1px solid #00cfff33;border-radius:2px;padding:8px 10px;font-family:var(--font-mono);font-size:13px;color:var(--text);outline:none;margin-bottom:10px" placeholder="e.g. 2024">
+      <div class="dz-desc">Archive the current year and start fresh. Old sessions stay in Google Sheets — just grouped under a different year label.</div>
+      <div id="new-year-idle"><button class="action-btn" onclick="showNewYear()">Start new year</button></div>
+      <div id="new-year-confirm" class="hidden">
+        <div style="font-size:11px;color:var(--neon-pink);margin-bottom:8px;font-family:var(--font-retro);letter-spacing:0.06em">Name the year you're archiving (e.g. 2024):</div>
+        <input type="text" id="year-name-input" style="width:100%;background:var(--dark3);border:1px solid #00cfff33;border-radius:2px;padding:10px 12px;font-family:var(--font-mono);font-size:16px;color:var(--text);outline:none;margin-bottom:10px" placeholder="e.g. 2024">
         <div class="confirm-row">
-          <button class="dz-btn confirm" onclick="doNewYear()">Confirm &amp; archive</button>
+          <button class="action-btn orange" onclick="doNewYear()">Confirm &amp; archive</button>
           <button class="cancel-btn" onclick="cancelNewYear()">Cancel</button>
         </div>
       </div>
     </div>
-    <div class="danger-zone">
-      <div class="dz-ttl">// switch year</div>
-      <div class="dz-desc">View a previous year's data or return to the current one.</div>
+    <div class="dz" style="border-color:#bf5fff44">
+      <div class="dz-ttl" style="color:var(--neon-purple)">// switch year</div>
+      <div class="dz-desc">Filter the dashboard to a specific year.</div>
       <div id="year-list" class="year-grid"></div>
-    </div>
-    <div class="danger-zone">
-      <div class="dz-ttl">// reset all data</div>
-      <div class="dz-desc">Permanently delete all sessions across all years. This cannot be undone.</div>
-      <div id="reset-idle"><button class="dz-btn" onclick="showReset()">Reset everything</button></div>
-      <div id="reset-confirm" class="confirm-hidden">
-        <div style="font-size:11px;color:#ff6600;margin-bottom:8px;font-family:var(--font-retro);letter-spacing:0.06em">Are you sure? All data will be lost.</div>
-        <div class="confirm-row">
-          <button class="dz-btn confirm" onclick="doReset()">Yes, delete all</button>
-          <button class="cancel-btn" onclick="cancelReset()">Cancel</button>
-        </div>
-      </div>
     </div>
   </div>
 </div>
-
+ 
+<div class="toast" id="toast"></div>
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+ 
 <script>
-const STORAGE_KEY='z2_data_v3';
-const SEED=[
-  {date:"2024-01-21",week:3,strain:6.3,pct_z2:0.67,avg_hr:131,max_hr:143,duration:30,rpm:61,resistance:45,avg_power:91,avg_speed:15.6,distance:7.80,time_z2:20.1},
-  {date:"2024-01-24",week:3,strain:6.3,pct_z2:0.60,avg_hr:131,max_hr:153,duration:30,rpm:59,resistance:48,avg_power:102,avg_speed:16.4,distance:8.17,time_z2:18.0},
-  {date:"2024-01-25",week:3,strain:6.2,pct_z2:0.41,avg_hr:128,max_hr:147,duration:30,rpm:61,resistance:45,avg_power:92,avg_speed:15.6,distance:7.81,time_z2:12.3},
-  {date:"2024-01-29",week:4,strain:6.5,pct_z2:0.49,avg_hr:131,max_hr:146,duration:30,rpm:65,resistance:44,avg_power:101,avg_speed:16.3,distance:8.12,time_z2:14.7},
-  {date:"2024-02-12",week:7,strain:6.3,pct_z2:0.99,avg_hr:127,max_hr:138,duration:30,rpm:57,resistance:47,avg_power:90,avg_speed:15.5,distance:7.76,time_z2:29.7},
-  {date:"2024-02-25",week:8,strain:6.2,pct_z2:0.89,avg_hr:125,max_hr:151,duration:30,rpm:63,resistance:47,avg_power:106,avg_speed:16.6,distance:8.29,time_z2:26.7},
-  {date:"2024-02-28",week:8,strain:6.7,pct_z2:0.91,avg_hr:130,max_hr:143,duration:30,rpm:57,resistance:51,avg_power:110,avg_speed:16.9,distance:8.43,time_z2:27.3},
-  {date:"2024-02-29",week:8,strain:6.5,pct_z2:0.99,avg_hr:129,max_hr:140,duration:30,rpm:60,resistance:47,avg_power:99,avg_speed:16.2,distance:8.08,time_z2:29.7},
-  {date:"2024-03-10",week:10,strain:5.9,pct_z2:1.00,avg_hr:123,max_hr:135,duration:30,rpm:62,resistance:47,avg_power:107,avg_speed:16.7,distance:8.35,time_z2:30.0},
-  {date:"2024-03-19",week:11,strain:6.1,pct_z2:0.96,avg_hr:125,max_hr:143,duration:30,rpm:59,resistance:49,avg_power:106,avg_speed:16.6,distance:8.30,time_z2:28.8},
-  {date:"2024-04-02",week:14,strain:6.0,pct_z2:0.97,avg_hr:123,max_hr:142,duration:30,rpm:62,resistance:51,avg_power:134,avg_speed:18.3,distance:9.14,time_z2:29.1},
-  {date:"2024-04-22",week:17,strain:6.2,pct_z2:0.99,avg_hr:126,max_hr:139,duration:30,rpm:56,resistance:52,avg_power:112,avg_speed:17.0,distance:8.41,time_z2:29.7},
-  {date:"2024-05-08",week:19,strain:5.7,pct_z2:0.98,avg_hr:121,max_hr:140,duration:30,rpm:56,resistance:51,avg_power:110,avg_speed:16.9,distance:8.36,time_z2:29.4},
-];
-
-let state={years:[{id:'current',name:'Current',sessions:[...SEED]}],activeYear:'current'};
-let charts={};
-
-async function load(){
-  try{const r=await window.storage.get(STORAGE_KEY);if(r)state=JSON.parse(r.value);}catch{}
+const API  = 'https://script.google.com/macros/s/AKfycbwrXIrNYt1nPFHMESd10hy3MFXfryAoxC9yPoEdNkLlxAV4ZAVhCP7_SFUmFi62G27e/exec';
+const TOK  = 'z2rider2024';
+const META_KEY  = 'z2meta_v1';
+const CACHE_KEY = 'z2cache_v1';
+ 
+let sessions = [];
+let meta = { activeYear: 'Current', years: ['Current'] };
+let charts = {};
+let pendingDel = null;
+let curPage = 'dashboard';
+ 
+function loadMeta()  { try { const r = localStorage.getItem(META_KEY);  if (r) meta = JSON.parse(r); } catch {} }
+function saveMeta()  { try { localStorage.setItem(META_KEY, JSON.stringify(meta)); } catch {} }
+function loadCache() { try { const r = localStorage.getItem(CACHE_KEY); if (r) sessions = JSON.parse(r); } catch {} }
+function saveCache() { try { localStorage.setItem(CACHE_KEY, JSON.stringify(sessions)); } catch {} }
+ 
+function setSync(state) {
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-status');
+  dot.className = 'dot';
+  const map = { synced:['synced','synced'], syncing:['syncing','syncing...'], offline:['offline','offline — cached'], saving:['syncing','saving...'] };
+  const [cls, label] = map[state] || ['',''];
+  if (cls) dot.classList.add(cls);
+  txt.textContent = label;
 }
-async function save(){
-  try{await window.storage.set(STORAGE_KEY,JSON.stringify(state));}catch{}
+ 
+function toast(msg, err) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (err ? ' err' : '');
+  setTimeout(() => el.className = 'toast', 2800);
 }
-
-function activeData(){
-  const yr=state.years.find(y=>y.id===state.activeYear);
-  return yr?yr.sessions:[];
+ 
+async function apiGet() {
+  const r = await fetch(API + '?token=' + TOK);
+  if (!r.ok) throw new Error(r.status);
+  const j = await r.json();
+  if (j.status !== 'ok') throw new Error(j.message);
+  return j.data || [];
 }
-function sorted(){return[...activeData()].sort((a,b)=>a.date>b.date?1:-1);}
-function derived(w){return{...w,power_per_hr:+(w.avg_power/w.avg_hr).toFixed(3),z2_score:+(w.avg_power/w.strain*w.time_z2).toFixed(1)};}
-function get(){return sorted().map(derived);}
-const avg=a=>a.reduce((s,v)=>s+v,0)/a.length;
-const fmtD=d=>new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
-function activeYearName(){return state.years.find(y=>y.id===state.activeYear)?.name||'Current';}
-
-function nav(page,btn){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+ 
+async function apiPost(body) {
+  const r = await fetch(API, { method: 'POST', body: JSON.stringify({ ...body, token: TOK }) });
+  if (!r.ok) throw new Error(r.status);
+  const j = await r.json();
+  if (j.status !== 'ok') throw new Error(j.message);
+  return j;
+}
+ 
+async function loadFromSheets(silent) {
+  setSync('syncing');
+  try {
+    const rows = await apiGet();
+    sessions = rows.map(r => ({
+      date:       String(r.date || ''),
+      week:       Number(r.week) || 0,
+      duration:   Number(r.duration) || 30,
+      avg_hr:     Number(r.avg_hr) || 0,
+      max_hr:     Number(r.max_hr) || 0,
+      strain:     Number(r.strain) || 0,
+      pct_z2:     Number(r.pct_z2) || 0,
+      time_z2:    Number(r.time_z2) || 0,
+      rpm:        Number(r.rpm) || 0,
+      resistance: Number(r.resistance) || 0,
+      avg_power:  Number(r.avg_power) || 0,
+      avg_speed:  Number(r.avg_speed) || 0,
+      distance:   Number(r.distance) || 0,
+      year_label: String(r.year_label || 'Current'),
+    }));
+    saveCache();
+    buildYears();
+    setSync('synced');
+    if (!silent) toast('// synced');
+    render(curPage);
+    showDash();
+  } catch(e) {
+    loadCache();
+    buildYears();
+    setSync('offline');
+    if (!silent) toast('// offline — cached data shown', true);
+    render(curPage);
+    showDash();
+  }
+}
+ 
+function showDash() {
+  document.getElementById('dash-loader').classList.add('hidden');
+  document.getElementById('dash-content').classList.remove('hidden');
+}
+ 
+function buildYears() {
+  const labels = [...new Set(sessions.map(s => s.year_label))].filter(Boolean).sort();
+  meta.years = labels.length ? labels : ['Current'];
+  if (!meta.years.includes(meta.activeYear)) meta.activeYear = meta.years[meta.years.length - 1];
+  if (!meta.years.includes('Current')) meta.years.unshift('Current');
+  saveMeta();
+}
+ 
+function active() { return sessions.filter(s => s.year_label === meta.activeYear); }
+function sorted() { return [...active()].sort((a,b) => a.date > b.date ? 1 : -1); }
+function derived(w) {
+  return { ...w,
+    power_per_hr: w.avg_hr > 0 ? +(w.avg_power / w.avg_hr).toFixed(3) : 0,
+    z2_score:     w.strain  > 0 ? +(w.avg_power / w.strain * w.time_z2).toFixed(1) : 0
+  };
+}
+function get() { return sorted().map(derived); }
+const avg = a => a.length ? a.reduce((s,v) => s+v, 0) / a.length : 0;
+const fmtD  = d => new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+const fmtDS = d => new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'numeric',day:'numeric'});
+ 
+function nav(page, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
   btn.classList.add('on');
   document.getElementById('pg-'+page).classList.add('on');
+  pendingDel = null;
+  curPage = page;
   render(page);
 }
-
-const COPTS={
-  responsive:true,maintainAspectRatio:false,
-  plugins:{legend:{display:false},tooltip:{
-    backgroundColor:'#10102a',borderColor:'#ff2d7855',borderWidth:1,
-    titleColor:'#e8e8ff',bodyColor:'#8888bb',padding:8,
-    titleFont:{family:'Share Tech Mono',size:11},bodyFont:{family:'Share Tech Mono',size:11}
-  }},
+ 
+const COPTS = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#10102a', borderColor:'#ff2d7855', borderWidth:1, titleColor:'#e8e8ff', bodyColor:'#8888bb', padding:10, titleFont:{family:'Share Tech Mono',size:12}, bodyFont:{family:'Share Tech Mono',size:11} } },
   scales:{
-    x:{grid:{color:'#ffffff08'},ticks:{color:'#8888bb',font:{family:'Share Tech Mono',size:9}}},
-    y:{grid:{color:'#ffffff08'},ticks:{color:'#8888bb',font:{family:'Share Tech Mono',size:9}}}
+    x:{ grid:{color:'#ffffff08'}, ticks:{color:'#8888bb',font:{family:'Share Tech Mono',size:10},maxRotation:45,minRotation:30,autoSkip:true,maxTicksLimit:8} },
+    y:{ grid:{color:'#ffffff08'}, ticks:{color:'#8888bb',font:{family:'Share Tech Mono',size:10}} }
   }
 };
-
-function mkLine(id,labels,data,color){
-  const ctx=document.getElementById(id);if(!ctx)return;
-  if(charts[id])charts[id].destroy();
-  charts[id]=new Chart(ctx,{type:'line',data:{labels,datasets:[{data,borderColor:color,backgroundColor:color+'18',borderWidth:2,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:color,pointBorderColor:'transparent',tension:0.35,fill:true}]},options:COPTS});
+function mkLine(id, labels, data, color) {
+  const ctx = document.getElementById(id); if (!ctx) return;
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(ctx, { type:'line', data:{ labels, datasets:[{ data, borderColor:color, backgroundColor:color+'18', borderWidth:2.5, pointRadius:4, pointHoverRadius:6, pointBackgroundColor:color, pointBorderColor:'transparent', tension:0.35, fill:true }] }, options:COPTS });
 }
-function mkBar(id,labels,data,color){
-  const ctx=document.getElementById(id);if(!ctx)return;
-  if(charts[id])charts[id].destroy();
-  charts[id]=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data,backgroundColor:color+'88',borderRadius:3,borderSkipped:false}]},options:COPTS});
+function mkBar(id, labels, data, color) {
+  const ctx = document.getElementById(id); if (!ctx) return;
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(ctx, { type:'bar', data:{ labels, datasets:[{ data, backgroundColor:color+'88', borderRadius:3, borderSkipped:false }] }, options:COPTS });
 }
-
-function renderDash(){
-  const d=get();
-  const lbl=d.map((_,i)=>`S${i+1}`);
-  document.getElementById('hdr-sessions').textContent=`${d.length} sessions`;
-  document.getElementById('hdr-year').textContent=activeYearName();
-  if(!d.length){document.getElementById('kpi-grid').innerHTML='<div style="grid-column:1/-1;color:#8888bb;padding:20px 0;font-size:12px">No sessions yet. Log your first ride!</div>';return;}
-  const trendHtml=(arr,hi=true)=>{
-    if(arr.length<6)return'';
-    const r=avg(arr.slice(-3)),p=avg(arr.slice(-6,-3));
-    const delta=((r-p)/p*100).toFixed(1);
-    const good=hi?delta>0:delta<0;
-    return`<div class="${good?'up':'down'}">${+delta>0?'▲':'▼'} ${Math.abs(delta)}%</div>`;
+ 
+function renderDash() {
+  const d = get();
+  document.getElementById('hdr-sessions').textContent = d.length + ' sessions';
+  document.getElementById('hdr-year').textContent = meta.activeYear;
+  if (!d.length) {
+    document.getElementById('kpi-grid').innerHTML = '<div style="grid-column:1/-1;color:#8888bb;padding:20px 0;font-size:13px">No sessions yet — log your first ride!</div>';
+    return;
+  }
+  const labels = d.map(x => fmtDS(x.date));
+  const trend = (arr, hi=true) => {
+    if (arr.length < 6) return '';
+    const r = avg(arr.slice(-3)), p = avg(arr.slice(-6,-3));
+    if (!p) return '';
+    const delta = ((r-p)/p*100).toFixed(1);
+    const good = hi ? +delta > 0 : +delta < 0;
+    return `<div class="kpi-trend ${good?'up':'dn'}">${+delta>0?'▲':'▼'} ${Math.abs(+delta)}%</div>`;
   };
-  const first=d[0],last=d[d.length-1];
-  const hrD=last.avg_hr-first.avg_hr;
-  document.getElementById('kpi-grid').innerHTML=[
-    {l:'Sessions',v:d.length,s:'total',t:''},
-    {l:'Avg power',v:Math.round(avg(d.map(x=>x.avg_power)))+'W',s:`best: ${Math.max(...d.map(x=>x.avg_power))}W`,t:trendHtml(d.map(x=>x.avg_power))},
-    {l:'Avg HR',v:Math.round(avg(d.map(x=>x.avg_hr)))+'bpm',s:`${first.avg_hr}→${last.avg_hr}`,t:hrD<0?`<div class="up">▼ HR ${Math.abs(hrD)}bpm</div>`:''},
-    {l:'Avg % Z2',v:Math.round(avg(d.map(x=>x.pct_z2))*100)+'%',s:'target: 80%+',t:trendHtml(d.map(x=>x.pct_z2))},
+  const first = d[0], last = d[d.length-1];
+  document.getElementById('kpi-grid').innerHTML = [
+    { l:'Sessions',  v:d.length,                                            s:'total logged',  t:'' },
+    { l:'Avg power', v:Math.round(avg(d.map(x=>x.avg_power)))+'W',          s:`best: ${Math.max(...d.map(x=>x.avg_power))}W`, t:trend(d.map(x=>x.avg_power)) },
+    { l:'Avg HR',    v:Math.round(avg(d.map(x=>x.avg_hr)))+'bpm',           s:`${first.avg_hr}→${last.avg_hr}bpm`, t:(last.avg_hr-first.avg_hr)<0?`<div class="kpi-trend up">▼ HR ${Math.abs(last.avg_hr-first.avg_hr)}bpm</div>`:''},
+    { l:'Avg % Z2',  v:Math.round(avg(d.map(x=>x.pct_z2))*100)+'%',        s:'target: 80%+',  t:trend(d.map(x=>x.pct_z2)) },
   ].map(k=>`<div class="kpi"><div class="kpi-lbl">${k.l}</div><div class="kpi-val">${k.v}</div><div class="kpi-sub">${k.s}</div>${k.t}</div>`).join('');
-  mkLine('c-power',lbl,d.map(x=>x.avg_power),'#00cfff');
-  mkBar('c-z2pct',lbl,d.map(x=>+(x.pct_z2*100).toFixed(1)),'#ff2d78');
+  mkLine('c-power', labels, d.map(x=>x.avg_power), '#00cfff');
+  mkBar( 'c-z2pct', labels, d.map(x=>+(x.pct_z2*100).toFixed(1)), '#ff2d78');
 }
-function renderCharts(){
-  const d=get(),lbl=d.map((_,i)=>`S${i+1}`);
-  mkLine('c-eff',lbl,d.map(x=>x.power_per_hr),'#bf5fff');
-  mkLine('c-hr',lbl,d.map(x=>x.avg_hr),'#ff2d78');
-  mkBar('c-z2score',lbl,d.map(x=>x.z2_score),'#00cfff');
+ 
+function renderCharts() {
+  const d = get(), labels = d.map(x=>fmtDS(x.date));
+  if (!d.length) return;
+  mkLine('c-eff',     labels, d.map(x=>x.power_per_hr), '#bf5fff');
+  mkLine('c-hr',      labels, d.map(x=>x.avg_hr),       '#ff2d78');
+  mkBar( 'c-z2score', labels, d.map(x=>x.z2_score),     '#00cfff');
 }
-function renderLog(){
-  const d=get();
-  const maxP=d.length?Math.max(...d.map(x=>x.avg_power)):0;
-  document.getElementById('log-body').innerHTML=d.length?d.map((r,i)=>{
-    const z2=r.pct_z2>=0.9?`<span class="bg bg-g">${(r.pct_z2*100).toFixed(0)}%</span>`:`<span class="bg bg-o">${(r.pct_z2*100).toFixed(0)}%</span>`;
-    return`<tr><td>${i+1}</td><td>${fmtD(r.date)}</td><td class="${r.avg_power===maxP?'hi':''}">${r.avg_power}</td><td>${r.avg_hr}</td><td>${z2}</td><td>${r.time_z2}</td><td>${r.strain}</td><td>${r.power_per_hr}</td><td class="${r.z2_score>=18?'hi':''}">${r.z2_score}</td></tr>`;
-  }).join(''):'<tr><td colspan="9" style="text-align:center;padding:24px;color:#8888bb">No sessions logged</td></tr>';
+ 
+function renderLog() {
+  const d = get();
+  const maxP = d.length ? Math.max(...d.map(x=>x.avg_power)) : 0;
+  const tb = document.getElementById('log-body');
+  if (!d.length) { tb.innerHTML = `<tr><td colspan="9" class="empty">No sessions logged</td></tr>`; return; }
+  tb.innerHTML = d.map((r,i) => {
+    const z2 = r.pct_z2 >= 0.9
+      ? `<span class="bg bg-g">${(r.pct_z2*100).toFixed(0)}%</span>`
+      : `<span class="bg bg-o">${(r.pct_z2*100).toFixed(0)}%</span>`;
+    const key = r.date+'_'+i;
+    const delBtn = pendingDel === key
+      ? `<button class="del-btn confirming" onclick="confirmDelete(${i})">sure?</button>`
+      : `<button class="del-btn" onclick="askDelete(${i},'${key}')">del</button>`;
+    return `<tr>
+      <td>${fmtD(r.date)}</td>
+      <td class="${r.avg_power===maxP?'hi':''}">${r.avg_power}</td>
+      <td>${r.avg_hr}</td><td>${z2}</td>
+      <td>${r.time_z2}</td><td>${r.strain}</td>
+      <td>${r.power_per_hr}</td>
+      <td class="${r.z2_score>=18?'hi':''}">${r.z2_score}</td>
+      <td>${delBtn}</td>
+    </tr>`;
+  }).join('');
 }
-function renderBests(){
-  const d=get();
-  if(!d.length){document.getElementById('pb-grid').innerHTML='<div style="grid-column:1/-1;color:#8888bb;padding:20px 0">No data yet</div>';return;}
-  const best=(fn,hi=true)=>{const v=hi?Math.max(...d.map(fn)):Math.min(...d.map(fn));const r=d.find(x=>fn(x)===v);return{v,date:r.date};};
-  const recs=[
-    {l:'Highest power',u:'W',...best(x=>x.avg_power)},
-    {l:'Best Z2 score',u:'',...best(x=>x.z2_score)},
-    {l:'Longest Z2 time',u:'min',...best(x=>x.time_z2)},
-    {l:'Best W/BPM',u:'',...best(x=>x.power_per_hr)},
-    {l:'Lowest avg HR',u:'bpm',...best(x=>x.avg_hr,false)},
-    {l:'Top % Z2',u:'%',v:+(Math.max(...d.map(x=>x.pct_z2))*100).toFixed(0),date:d.find(x=>x.pct_z2===Math.max(...d.map(y=>y.pct_z2))).date},
-    {l:'Top speed',u:'mph',...best(x=>x.avg_speed)},
-    {l:'Furthest',u:'mi',...best(x=>x.distance)},
-  ];
-  document.getElementById('pb-grid').innerHTML=recs.map(r=>`<div class="pb"><div class="pb-lbl">${r.l}</div><div class="pb-val">${r.v}${r.u?' '+r.u:''}</div><div class="pb-date">${fmtD(r.date)}</div></div>`).join('');
+ 
+function askDelete(i, key) { pendingDel = key; renderLog(); }
+ 
+async function confirmDelete(i) {
+  const r = get()[i]; if (!r) return;
+  pendingDel = null;
+  setSync('saving');
+  try {
+    await apiPost({ action:'delete', date:r.date, avg_power:r.avg_power, avg_hr:r.avg_hr });
+    toast('// session deleted');
+    await loadFromSheets(true);
+  } catch(e) {
+    setSync('offline');
+    toast('// delete failed', true);
+    renderLog();
+  }
 }
-function renderSettings(){
-  const list=document.getElementById('year-list');
-  list.innerHTML=state.years.map(y=>`
-    <div class="year-chip ${y.id===state.activeYear?'active-yr':''}" onclick="switchYear('${y.id}')">
-      <div>
-        <div class="yc-name">${y.name}</div>
-        <div class="yc-count">${y.sessions.length} sessions</div>
-      </div>
-      ${y.id===state.activeYear?'<div class="yc-dot"></div>':''}
+ 
+function renderBests() {
+  const d = get();
+  if (!d.length) { document.getElementById('pb-grid').innerHTML = '<div style="grid-column:1/-1;color:#8888bb;padding:20px 0">No sessions yet</div>'; return; }
+  const best = (fn, hi=true) => { const v = hi ? Math.max(...d.map(fn)) : Math.min(...d.map(fn)); return { v, date: d.find(x=>fn(x)===v).date }; };
+  [
+    { l:'Highest power', u:'W',   ...best(x=>x.avg_power) },
+    { l:'Best Z2 score', u:'',    ...best(x=>x.z2_score) },
+    { l:'Longest Z2',    u:'min', ...best(x=>x.time_z2) },
+    { l:'Best W/BPM',    u:'',    ...best(x=>x.power_per_hr) },
+    { l:'Lowest HR',     u:'bpm', ...best(x=>x.avg_hr,false) },
+    { l:'Top % Z2',      u:'%',   v:+(Math.max(...d.map(x=>x.pct_z2))*100).toFixed(0), date:d.find(x=>x.pct_z2===Math.max(...d.map(y=>y.pct_z2))).date },
+    { l:'Top speed',     u:'mph', ...best(x=>x.avg_speed) },
+    { l:'Furthest',      u:'mi',  ...best(x=>x.distance) },
+  ].forEach((r,i,a) => {
+    if (!i) document.getElementById('pb-grid').innerHTML = '';
+    document.getElementById('pb-grid').innerHTML += `<div class="pb"><div class="pb-lbl">${r.l}</div><div class="pb-val">${r.v}${r.u?' '+r.u:''}</div><div class="pb-date">${fmtD(r.date)}</div></div>`;
+  });
+}
+ 
+function renderSettings() {
+  document.getElementById('year-list').innerHTML = meta.years.map(y => `
+    <div class="year-chip ${y===meta.activeYear?'active-yr':''}" onclick="switchYear('${y}')">
+      <div><div class="yc-name">${y}</div><div class="yc-count">${sessions.filter(s=>s.year_label===y).length} sessions</div></div>
+      ${y===meta.activeYear?'<div class="yc-dot"></div>':''}
     </div>`).join('');
 }
-function render(p){
-  if(p==='dashboard')renderDash();
-  else if(p==='charts')renderCharts();
-  else if(p==='log')renderLog();
-  else if(p==='bests')renderBests();
-  else if(p==='settings')renderSettings();
+ 
+function render(p) {
+  if      (p==='dashboard') renderDash();
+  else if (p==='charts')    renderCharts();
+  else if (p==='log')       renderLog();
+  else if (p==='bests')     renderBests();
+  else if (p==='settings')  renderSettings();
 }
-
-function g(id){return parseFloat(document.getElementById(id).value)||0;}
-function gs(id){return document.getElementById(id).value;}
-
-async function saveWorkout(){
-  const d=gs('f-date');if(!d){alert('Enter a date first.');return;}
-  const yr=state.years.find(y=>y.id===state.activeYear);
-  if(!yr)return;
-  yr.sessions.push({date:d,week:g('f-week')||0,duration:g('f-dur')||30,avg_hr:g('f-hr'),max_hr:g('f-maxhr'),strain:g('f-strain'),pct_z2:g('f-z2pct'),time_z2:g('f-z2min'),rpm:g('f-rpm'),resistance:g('f-res'),avg_power:g('f-power'),avg_speed:g('f-speed'),distance:g('f-dist')});
-  await save();
-  const ok=document.getElementById('save-ok');ok.textContent='// session saved';setTimeout(()=>ok.textContent='',2500);
-  ['f-week','f-hr','f-maxhr','f-strain','f-z2pct','f-z2min','f-rpm','f-res','f-power','f-speed','f-dist'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f-dur').value='30';document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+ 
+const g  = id => parseFloat(document.getElementById(id).value) || 0;
+const gs = id => document.getElementById(id).value;
+ 
+async function saveWorkout() {
+  const d = gs('f-date');
+  if (!d) { document.getElementById('save-err').textContent = '// please enter a date'; return; }
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = '// saving...';
+  document.getElementById('save-ok').textContent = '';
+  document.getElementById('save-err').textContent = '';
+  setSync('saving');
+  try {
+    await apiPost({ action:'save', data:{
+      date:d, week:g('f-week')||0, duration:g('f-dur')||30,
+      avg_hr:g('f-hr'), max_hr:g('f-maxhr'), strain:g('f-strain'),
+      pct_z2:g('f-z2pct'), time_z2:g('f-z2min'),
+      rpm:g('f-rpm'), resistance:g('f-res'),
+      avg_power:g('f-power'), avg_speed:g('f-speed'), distance:g('f-dist'),
+      year_label: meta.activeYear
+    }});
+    document.getElementById('save-ok').textContent = '// session saved to sheets';
+    setTimeout(() => document.getElementById('save-ok').textContent = '', 3500);
+    ['f-week','f-hr','f-maxhr','f-strain','f-z2pct','f-z2min','f-rpm','f-res','f-power','f-speed','f-dist'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-dur').value = '30';
+    document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+    toast('// session saved');
+    await loadFromSheets(true);
+  } catch(e) {
+    document.getElementById('save-err').textContent = '// save failed — check connection';
+    setSync('offline');
+  }
+  btn.disabled = false; btn.textContent = '// save session';
 }
-
-function showNewYear(){document.getElementById('new-year-idle').style.display='none';document.getElementById('new-year-confirm').style.display='block';}
-function cancelNewYear(){document.getElementById('new-year-idle').style.display='block';document.getElementById('new-year-confirm').style.display='none';}
-async function doNewYear(){
-  const name=document.getElementById('year-name-input').value.trim()||`Year ${state.years.length+1}`;
-  const oldYear=state.years.find(y=>y.id===state.activeYear);
-  if(oldYear&&oldYear.id==='current'){oldYear.name=name||oldYear.name;}
-  const newId='yr_'+Date.now();
-  state.years.unshift({id:newId,name:'Current',sessions:[]});
-  state.activeYear=newId;
-  if(oldYear&&oldYear.id!=='current'){oldYear.name=name;}
-  else if(oldYear){oldYear.name=name;}
-  const newestYr=state.years.find(y=>y.id===newId);newestYr.name='Current';
-  const archivedYr=state.years.find(y=>y.id!==newId&&y.name==='Current');if(archivedYr)archivedYr.name=name;
-  await save();cancelNewYear();renderSettings();renderDash();
-}
-async function switchYear(id){state.activeYear=id;await save();renderSettings();renderDash();}
-function showReset(){document.getElementById('reset-idle').style.display='none';document.getElementById('reset-confirm').style.display='block';}
-function cancelReset(){document.getElementById('reset-idle').style.display='block';document.getElementById('reset-confirm').style.display='none';}
-async function doReset(){
-  state={years:[{id:'current',name:'Current',sessions:[]}],activeYear:'current'};
-  await save();cancelReset();renderSettings();renderDash();
-}
-
-(async()=>{
-  await load();
+ 
+function showNewYear()   { document.getElementById('new-year-idle').classList.add('hidden');    document.getElementById('new-year-confirm').classList.remove('hidden'); }
+function cancelNewYear() { document.getElementById('new-year-idle').classList.remove('hidden'); document.getElementById('new-year-confirm').classList.add('hidden'); }
+ 
+function doNewYear() {
+  const name = document.getElementById('year-name-input').value.trim();
+  if (!name) { alert('Please enter a year name like 2024'); return; }
+  sessions.filter(s => s.year_label === meta.activeYear).forEach(s => s.year_label = name);
+  saveCache();
+  buildYears();
+  meta.activeYear = 'Current';
+  saveMeta();
+  cancelNewYear();
+  document.getElementById('year-name-input').value = '';
+  toast('// ' + name + ' archived — new year started');
+  renderSettings();
   renderDash();
-  document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
-})();
+}
+ 
+function switchYear(y) {
+  meta.activeYear = y; saveMeta();
+  renderSettings(); renderDash();
+  toast('// viewing ' + y);
+}
+ 
+loadMeta();
+loadCache();
+if (sessions.length) { showDash(); renderDash(); }
+loadFromSheets(true);
+document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
 </script>
+</html>
