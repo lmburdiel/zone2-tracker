@@ -184,8 +184,8 @@ tbody tr:hover td{background:#00cfff08;color:var(--text)}
   <div class="card">
     <div class="sec-ttl">// whoop data</div>
     <div class="frow">
-      <div class="field"><label>Date</label><input type="date" id="f-date"></div>
-      <div class="field"><label>Week #</label><input type="number" id="f-week" placeholder="e.g. 20"></div>
+      <div class="field"><label>Date</label><input type="date" id="f-date" oninput="updateWeekDisplay(this.value)"></div>
+      <div class="field"><label>Week of year</label><div id="week-display" style="background:var(--dark3);border:1px solid #00cfff18;border-radius:2px;padding:10px 12px;font-family:var(--font-mono);font-size:16px;color:var(--muted)">—</div></div>
     </div>
     <div class="frow">
       <div class="field"><label>Avg HR (bpm)</label><input type="number" id="f-hr" placeholder="125"></div>
@@ -259,6 +259,20 @@ let meta = { activeYear: 'Current', years: ['Current'] };
 let charts = {};
 let pendingDel = null;
 let curPage = 'dashboard';
+ 
+function getWeekOfYear(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const jan1 = new Date(d.getFullYear(), 0, 1);
+  return Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+}
+ 
+function updateWeekDisplay(dateStr) {
+  const el = document.getElementById('week-display');
+  if (!el) return;
+  if (!dateStr) { el.textContent = '—'; return; }
+  el.textContent = 'Week ' + getWeekOfYear(dateStr);
+  el.style.color = 'var(--neon-blue)';
+}
  
 function loadMeta()  { try { const r = localStorage.getItem(META_KEY);  if (r) meta = JSON.parse(r); } catch {} }
 function saveMeta()  { try { localStorage.setItem(META_KEY, JSON.stringify(meta)); } catch {} }
@@ -515,7 +529,7 @@ async function saveWorkout() {
   setSync('saving');
   try {
     await apiPost({ action:'save', data:{
-      date:d, week:g('f-week')||0, duration:g('f-dur')||30,
+      date:d, week:getWeekOfYear(d), duration:g('f-dur')||30,
       avg_hr:g('f-hr'), max_hr:g('f-maxhr'), strain:g('f-strain'),
       pct_z2:g('f-z2pct'), time_z2:g('f-z2min'),
       rpm:g('f-rpm'), resistance:g('f-res'),
@@ -524,7 +538,7 @@ async function saveWorkout() {
     }});
     document.getElementById('save-ok').textContent = '// session saved to sheets';
     setTimeout(() => document.getElementById('save-ok').textContent = '', 3500);
-    ['f-week','f-hr','f-maxhr','f-strain','f-z2pct','f-z2min','f-rpm','f-res','f-power','f-speed','f-dist'].forEach(id => document.getElementById(id).value = '');
+    ['f-hr','f-maxhr','f-strain','f-z2pct','f-z2min','f-rpm','f-res','f-power','f-speed','f-dist'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('f-dur').value = '30';
     document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
     toast('// session saved');
@@ -564,6 +578,9 @@ loadMeta();
 loadCache();
 if (sessions.length) { showDash(); renderDash(); }
 loadFromSheets(true);
-document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+const _today = new Date().toISOString().split('T')[0];
+document.getElementById('f-date').value = _today;
+updateWeekDisplay(_today);
 </script>
 </html>
+ 
